@@ -2,9 +2,10 @@ import requests
 from bs4 import BeautifulSoup
 import smtplib
 from email.mime.text import MIMEText
+import os
 
 EMAIL = "medebhavani@gmail.com"
-APP_PASSWORD = ""
+APP_PASSWORD = os.environ.get("GMAIL_PASSWORD")
 
 KEYWORDS = ["KYC", "Sanctions", "AML", "Financial Crime"]
 
@@ -19,21 +20,23 @@ def search_jobs():
 
     for url in urls:
         try:
-            r = requests.get(url)
+            r = requests.get(url, timeout=10)
             soup = BeautifulSoup(r.text, "html.parser")
             for a in soup.find_all("a"):
                 title = a.text.strip()
                 link = a.get("href")
                 if title and link and any(k.lower() in title.lower() for k in KEYWORDS):
-                    jobs.append(f"{title} - {url}")
-        except:
-            pass
+                    if not link.startswith("http"):
+                        link = url + link
+                    jobs.append(f"{title} | {link}")
+        except Exception as e:
+            print("Error:", e)
 
-    return "\n".join(jobs) if jobs else "No new jobs today."
+    return "\n\n".join(jobs) if jobs else "No new KYC / AML jobs found today."
 
 def send_email(body):
     msg = MIMEText(body)
-    msg["Subject"] = "Daily KYC Job Alert (Cloud Bot)"
+    msg["Subject"] = "Daily KYC / Sanctions Job Alerts"
     msg["From"] = EMAIL
     msg["To"] = EMAIL
 
@@ -41,6 +44,5 @@ def send_email(body):
     server.login(EMAIL, APP_PASSWORD)
     server.sendmail(EMAIL, EMAIL, msg.as_string())
     server.quit()
-
 
 send_email(search_jobs())
