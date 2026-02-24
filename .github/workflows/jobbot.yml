@@ -2,7 +2,7 @@ name: KYC Job Bot
 
 on:
   schedule:
-    - cron: '30 3 * * *'   # 9 AM India time
+    - cron: "0 9 * * *"   # Runs daily 9 AM UTC
   workflow_dispatch:
 
 jobs:
@@ -10,17 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-    - name: Run Job Bot
-      run: |
-        python cloud_kyc_job_bot.py
+      - name: Run Bot
+        env:
+          EMAIL: ${{ secrets.EMAIL }}
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+        run: python cloud_kyc_job_bot.py
