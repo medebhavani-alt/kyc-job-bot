@@ -4,7 +4,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 EMAIL = "medebhavani@gmail.com"
-APP_PASSWORD = "rprf fdle zbtp yzpd"
+APP_PASSWORD = ""
 
 KEYWORDS = ["KYC", "Sanctions", "AML", "Financial Crime"]
 
@@ -41,5 +41,6 @@ def send_email(body):
     server.login(EMAIL, APP_PASSWORD)
     server.sendmail(EMAIL, EMAIL, msg.as_string())
     server.quit()
+
 
 send_email(search_jobs())
