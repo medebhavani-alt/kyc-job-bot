@@ -1,48 +1,48 @@
 import requests
 from bs4 import BeautifulSoup
 import smtplib
-from email.mime.text import MIMEText
 import os
 
-EMAIL = "medebhavani@gmail.com"
-APP_PASSWORD = os.environ.get("GMAIL_PASSWORD")
+# Load secrets from GitHub Actions
+EMAIL = os.getenv("EMAIL")
+APP_PASSWORD = os.getenv("APP_PASSWORD")
 
-KEYWORDS = ["KYC", "Sanctions", "AML", "Financial Crime"]
+# Job search URL
+URL = "https://www.indeed.com/jobs?q=kyc+analyst&l=Remote"
 
 def search_jobs():
+    print("🔍 Searching jobs...")
+    headers = {"User-Agent": "Mozilla/5.0"}
+    response = requests.get(URL, headers=headers)
+    soup = BeautifulSoup(response.text, "html.parser")
+
     jobs = []
-    urls = [
-        "https://boards.greenhouse.io/stripe",
-        "https://boards.greenhouse.io/revolut",
-        "https://boards.greenhouse.io/wise",
-        "https://boards.greenhouse.io/coinbase"
-    ]
+    for job in soup.select(".jobTitle span"):
+        title = job.text.strip()
+        if "KYC" in title or "AML" in title:
+            jobs.append(title)
 
-    for url in urls:
-        try:
-            r = requests.get(url, timeout=10)
-            soup = BeautifulSoup(r.text, "html.parser")
-            for a in soup.find_all("a"):
-                title = a.text.strip()
-                link = a.get("href")
-                if title and link and any(k.lower() in title.lower() for k in KEYWORDS):
-                    if not link.startswith("http"):
-                        link = url + link
-                    jobs.append(f"{title} | {link}")
-        except Exception as e:
-            print("Error:", e)
+    return jobs
 
-    return "\n\n".join(jobs) if jobs else "No new KYC / AML jobs found today."
 
-def send_email(body):
-    msg = MIMEText(body)
-    msg["Subject"] = "Daily KYC / Sanctions Job Alerts"
-    msg["From"] = EMAIL
-    msg["To"] = EMAIL
+def send_email(job_list):
+    if not EMAIL or not APP_PASSWORD:
+        raise Exception("❌ EMAIL or APP_PASSWORD is missing in GitHub Secrets")
+
+    if not job_list:
+        job_list = ["No new KYC jobs found today"]
+
+    message = "Subject: Daily KYC Job Alert\n\n"
+    message += "\n".join(job_list)
 
     server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
     server.login(EMAIL, APP_PASSWORD)
-    server.sendmail(EMAIL, EMAIL, msg.as_string())
+    server.sendmail(EMAIL, EMAIL, message)
     server.quit()
 
-send_email(search_jobs())
+    print("✅ Email sent successfully!")
+
+
+if __name__ == "__main__":
+    jobs = search_jobs()
+    send_email(jobs)
