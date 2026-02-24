@@ -23,4 +23,4 @@ jobs:
 
     - name: Run Job Bot
       run: |
-        python job_bot.py
+        python cloud_kyc_job_bot.py
