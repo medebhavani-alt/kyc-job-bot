@@ -2,7 +2,8 @@ name: KYC Job Bot
 
 on:
   schedule:
-    - cron: "0 9 * * *"   # Runs daily 9 AM UTC
+schedule:
+  - cron: "30 3 * * *"   # 9 AM India Time
   workflow_dispatch:
 
 jobs:
